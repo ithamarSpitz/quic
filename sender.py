@@ -5,10 +5,13 @@ async def send_data(stream_socket, file_path, port):
     with open(file_path, 'rb') as file:
         while True:
             chunk = file.read(1024)
+            print(chunk)
             if not chunk:
                 break
             stream_socket.sendto(chunk, ('localhost', port))
             await asyncio.sleep(0)  # Allow other tasks to run
+    stream_socket.sendto("EXIT".encode(), ('localhost', port))
+
 
 async def send_file(file_path, num_streams):
     # Create UDP socket for sending the number of streams
@@ -33,10 +36,12 @@ async def send_file(file_path, num_streams):
         await asyncio.gather(*coroutines)
 
     finally:
+        client_socket.sendto(f"CLOSE".encode(), server_address)  # Notify receiver of port
         # Close socket
         client_socket.close()
+        print(num_streams)
 
 if __name__ == "__main__":
     file_path = 'example.txt'
-    num_streams = 3  # Number of streams to use
+    num_streams = 5  # Number of streams to use
     asyncio.run(send_file(file_path, num_streams))
